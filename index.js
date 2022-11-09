@@ -56,7 +56,8 @@ async function run() {
         });
         // get all review
         app.get("/allReview", async (req, res) => {
-            const cursor = reviewCollection.find({});
+            const serviceId = req.query.serviceId;
+            const cursor = reviewCollection.find({ serviceId: serviceId });
             const allReviews = await cursor.toArray();
             res.send(allReviews);
         });
