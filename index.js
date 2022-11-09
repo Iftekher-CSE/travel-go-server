@@ -67,6 +67,15 @@ async function run() {
             const allReviews = await cursor.toArray();
             res.send(allReviews);
         });
+
+        // Delete a review
+        app.delete("/allReview/:id", async (req, res) => {
+            const id = req.params.id;
+            const result = await reviewCollection.deleteOne({
+                _id: ObjectId(id),
+            });
+            res.send(result);
+        });
     } finally {
     }
 }
