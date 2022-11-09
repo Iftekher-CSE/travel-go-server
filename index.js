@@ -54,13 +54,16 @@ async function run() {
             const result = await reviewCollection.insertOne(review);
             res.send(result);
         });
-        // get all review
+
+        // get all review with query
         app.get("/allReview", async (req, res) => {
             const serviceId = req.query.serviceId;
+            const email = req.query.email;
+            const query = {
+                $or: [{ serviceId: serviceId }, { email: email }],
+            };
             const sort = { reviewTime: -1 };
-            const cursor = reviewCollection
-                .find({ serviceId: serviceId })
-                .sort(sort);
+            const cursor = reviewCollection.find(query).sort(sort);
             const allReviews = await cursor.toArray();
             res.send(allReviews);
         });
