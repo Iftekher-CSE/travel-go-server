@@ -57,7 +57,10 @@ async function run() {
         // get all review
         app.get("/allReview", async (req, res) => {
             const serviceId = req.query.serviceId;
-            const cursor = reviewCollection.find({ serviceId: serviceId });
+            const sort = { reviewTime: -1 };
+            const cursor = reviewCollection
+                .find({ serviceId: serviceId })
+                .sort(sort);
             const allReviews = await cursor.toArray();
             res.send(allReviews);
         });
