@@ -17,6 +17,24 @@ const client = new MongoClient(uri, {
     useUnifiedTopology: true,
     serverApi: ServerApiVersion.v1,
 });
+
+function verifyJWT(req, res, next) {
+    const headerTokenJWT = req.headers.authorization;
+    if (!headerTokenJWT) {
+        return res.status(401).send({ message: "unauthorized access(no-jwt)" });
+    }
+    const token = headerTokenJWT.split(" ")[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res
+                .status(403)
+                .send({ message: "forbidden access(jwt-match)" });
+        }
+        req.decoded = decoded;
+        next();
+    });
+}
+
 async function run() {
     const serviceCollection = client
         .db("travelGo")
@@ -65,10 +83,27 @@ async function run() {
             res.send(result);
         });
 
-        // get all review with query
-        app.get("/allReview", async (req, res) => {
+        // get all review based on service
+        app.get("/serviceReview", async (req, res) => {
             const serviceId = req.query.serviceId;
+            const query = { serviceId: serviceId };
+            const sort = { reviewTime: -1 };
+            const cursor = reviewCollection.find(query).sort(sort);
+            const allReviews = await cursor.toArray();
+            res.send(allReviews);
+        });
+
+        // get all review with query
+        app.get("/allReview", verifyJWT, async (req, res) => {
+            // verify email based on JWT
+            const decoded = req.decoded;
             const email = req.query.email;
+            if (decoded.email !== email) {
+                return res
+                    .status(403)
+                    .send({ message: "forbidden access(email-match)" });
+            }
+            const serviceId = req.query.serviceId;
             const query = {
                 $or: [{ serviceId: serviceId }, { email: email }],
             };
